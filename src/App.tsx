@@ -124,20 +124,21 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans p-4 md:p-8">
-      <div className="max-w-xl mx-auto space-y-8">
+    <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans p-4 md:p-8 lg:p-12">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <header className="text-center space-y-2">
+        <header className="text-center space-y-2 mb-4">
           <div className="inline-flex items-center justify-center p-3 bg-yamaha-blue rounded-2xl shadow-lg shadow-blue-200 mb-2">
             <Calculator className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-800">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-800">
             Simulador de Financiamento Yamaha
           </h1>
         </header>
 
-        {/* Form Section */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Form Section */}
+          <section className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100 space-y-6">
           <div className="grid grid-cols-1 gap-6">
             {/* Two Dropdowns for Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,99 +238,110 @@ export default function App() {
               </p>
             </div>
           </div>
-        </section>
+          </section>
 
-        {/* Result Card (For Print) */}
-        <AnimatePresence>
-          {calculation && product && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-4"
-            >
-              <div 
-                id="simulation-card"
-                className="bg-white rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-neutral-100 overflow-hidden relative"
-              >
-                {/* Header Section */}
-                <div className="bg-yamaha-blue p-6 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                  <div className="relative z-10 space-y-0.5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-200 opacity-80">
-                      Simulação
-                    </p>
-                    <h2 className="text-4xl font-black tracking-tighter leading-[0.9]">
-                      {product}
-                    </h2>
-                  </div>
-                </div>
-
-                {/* Body Section */}
-                <div className="p-6 space-y-4">
-                  <div className="bg-blue-50/50 rounded-3xl p-4 border border-blue-100 text-center space-y-0.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-yamaha-blue opacity-70">
-                      Entrada
-                    </p>
-                    <p className="text-2xl font-black text-neutral-900 tracking-tight">
-                      {formatCurrency(downPayment)}
-                    </p>
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                      <div className="w-full border-t border-dashed border-neutral-200"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-300">
-                        Plano Sugerido
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-center space-y-0">
-                    <div className="inline-flex items-baseline gap-2">
-                      <span className="text-4xl font-black text-neutral-900 tracking-tighter">
-                        {installments}x
-                      </span>
-                      <span className="text-base font-bold text-yamaha-blue">de</span>
-                    </div>
-                    <div className="text-3xl font-black text-yamaha-blue tracking-tight">
-                      {formatCurrency(calculation.pmt)}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={reset}
-                  className="w-full h-16 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
+          {/* Result Column */}
+          <div className="space-y-6">
+            <AnimatePresence mode="wait">
+              {calculation && product ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-4"
                 >
-                  <RefreshCw className="w-5 h-5" />
-                  Fazer nova simulação
-                </button>
-                
-                <p className="text-center text-[10px] text-neutral-400 px-8">
-                  *Valores sujeitos a alteração conforme análise de crédito e tabela vigente.
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  <div 
+                    id="simulation-card"
+                    className="bg-white rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-neutral-100 overflow-hidden relative"
+                  >
+                    {/* Header Section */}
+                    <div className="bg-yamaha-blue p-6 text-white relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+                      <div className="relative z-10 space-y-0.5">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-200 opacity-80">
+                          Simulação
+                        </p>
+                        <h2 className="text-4xl font-black tracking-tighter leading-[0.9]">
+                          {product}
+                        </h2>
+                      </div>
+                    </div>
 
-        {/* Empty State / Guide */}
-        {!calculation && (
-          <div className="text-center py-12 px-8 space-y-4 opacity-40">
-            <div className="w-16 h-16 bg-neutral-200 rounded-full mx-auto flex items-center justify-center">
-              <Share2 className="w-6 h-6 text-neutral-500" />
-            </div>
-            <p className="text-sm font-medium text-neutral-500">
-              Preencha os campos acima para gerar o resumo de financiamento para o cliente.
-            </p>
+                    {/* Body Section */}
+                    <div className="p-6 space-y-4">
+                      <div className="bg-blue-50/50 rounded-3xl p-4 border border-blue-100 text-center space-y-0.5">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-yamaha-blue opacity-70">
+                          Entrada
+                        </p>
+                        <p className="text-2xl font-black text-neutral-900 tracking-tight">
+                          {formatCurrency(downPayment)}
+                        </p>
+                      </div>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                          <div className="w-full border-t border-dashed border-neutral-200"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                          <span className="bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-300">
+                            Plano Sugerido
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-center space-y-0">
+                        <div className="inline-flex items-baseline gap-2">
+                          <span className="text-4xl font-black text-neutral-900 tracking-tighter">
+                            {installments}x
+                          </span>
+                          <span className="text-base font-bold text-yamaha-blue">de</span>
+                        </div>
+                        <div className="text-3xl font-black text-yamaha-blue tracking-tight">
+                          {formatCurrency(calculation.pmt)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={reset}
+                      className="w-full h-16 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                      Fazer nova simulação
+                    </button>
+                    
+                    <p className="text-center text-[10px] text-neutral-400 px-8">
+                      *Valores sujeitos a alteração conforme análise de crédito e tabela vigente.
+                    </p>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white/50 border-2 border-dashed border-neutral-200 rounded-[2.5rem] p-12 text-center space-y-4"
+                >
+                  <div className="w-16 h-16 bg-neutral-100 rounded-full mx-auto flex items-center justify-center">
+                    <Share2 className="w-6 h-6 text-neutral-300" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-neutral-400 uppercase tracking-wider">
+                      Aguardando Dados
+                    </p>
+                    <p className="text-xs text-neutral-400 max-w-[200px] mx-auto">
+                      Selecione um produto e insira os valores para gerar o resumo.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
