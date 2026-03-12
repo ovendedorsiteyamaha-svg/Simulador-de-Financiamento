@@ -1,0 +1,5 @@
+{
+  "name": "Simulador Yamaha",
+  "description": "Simulador de financiamento rápido para vendedores Yamaha, otimizado para prints de WhatsApp.",
+  "requestFramePermissions": []
+}
