@@ -76,13 +76,13 @@ export default function App() {
   // Function to clean BRL values before calculation
   const limparNumero = (valor: string): number => {
     if (!valor) return 0;
-    return parseFloat(
-      valor
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .trim()
-    );
+    // Remove R$, remove points (thousands), and convert comma to point (decimal)
+    const v = valor
+      .replace("R$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .trim();
+    return parseFloat(v) || 0;
   };
 
   // Function to format number to BRL currency
@@ -98,11 +98,12 @@ export default function App() {
     return valor.replace(/\D/g, '');
   };
 
-  // Stable mask application
+  // Stable mask application (Cents-based logic for BRL)
   const aplicarMascara = (val: string) => {
     const numeroStr = somenteNumero(val);
     if (numeroStr === "") return "";
-    const numero = parseInt(numeroStr);
+    // Divide by 100 to treat input as cents, ensuring stable formatting
+    const numero = parseInt(numeroStr) / 100;
     return formatarReal(numero);
   };
 
@@ -112,7 +113,7 @@ export default function App() {
     setter(masked);
   };
 
-  // Calculation logic
+  // Calculation logic (Price Table Formula)
   const calculation = useMemo(() => {
     const valorProduto = limparNumero(productValue);
     const entrada = limparNumero(downPayment);
@@ -120,8 +121,8 @@ export default function App() {
 
     if (valorFinanciado <= 0 || !installments) return null;
 
-    const rate = RATES[installments];
-    const n = installments;
+    const rate = RATES[installments]; // Monthly interest rate
+    const n = installments;           // Number of installments
 
     // Price Table Formula: PMT = PV * (i * (1 + i)^n) / ((1 + i)^n - 1)
     const pmt = valorFinanciado * (rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1);
