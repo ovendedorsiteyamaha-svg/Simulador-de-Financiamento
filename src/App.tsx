@@ -57,8 +57,8 @@ const RATES: Record<number, number> = {
 
 export default function App() {
   const [product, setProduct] = useState<string>('');
-  const [productValue, setProductValue] = useState<number>(0);
-  const [downPayment, setDownPayment] = useState<number>(0);
+  const [productValue, setProductValue] = useState<string>('');
+  const [downPayment, setDownPayment] = useState<string>('');
   const [installments, setInstallments] = useState<number>(48);
 
   // Split products for the two dropdowns
@@ -73,46 +73,27 @@ export default function App() {
     setProduct(val);
   };
 
-  // Function to convert BRL formatted string to a clean number
+  // Function to convert BRL formatted string to a clean number for calculation
   const parseBRL = (val: string): number => {
     if (!val) return 0;
     
-    // Remove all dots (thousands separator)
-    // Replace comma with dot (decimal separator)
-    const normalized = val.replace(/\./g, '').replace(',', '.');
-    
-    // Parse to float
-    const parsed = parseFloat(normalized);
+    // Remove dots (thousands separator) and replace comma with dot (decimal separator)
+    const cleanValue = val.replace(/\./g, '').replace(',', '.');
+    const parsed = parseFloat(cleanValue);
     
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  // Currency Masking Logic
-  const handleCurrencyChange = (e: ChangeEvent<HTMLInputElement>, setter: (v: number) => void) => {
-    const val = e.target.value;
-    
-    // Use the parseBRL function to get the clean number
-    const numericValue = parseBRL(val);
-    
-    // Limit to prevent extreme values
-    if (numericValue > 999999999) return;
-    
-    setter(numericValue);
-  };
-
-  const formatForInput = (val: number) => {
-    if (val === 0) return '';
-    
-    // Format back to BRL string for the input display
-    return new Intl.NumberFormat('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(val);
+  // Simple change handler without masking
+  const handleCurrencyChange = (val: string, setter: (v: string) => void) => {
+    setter(val);
   };
 
   // Calculation logic
   const calculation = useMemo(() => {
-    const financed = productValue - downPayment;
+    const val = parseBRL(productValue);
+    const down = parseBRL(downPayment);
+    const financed = val - down;
 
     if (financed <= 0 || !installments) return null;
 
@@ -131,8 +112,8 @@ export default function App() {
 
   const reset = () => {
     setProduct('');
-    setProductValue(0);
-    setDownPayment(0);
+    setProductValue('');
+    setDownPayment('');
     setInstallments(48);
   };
 
@@ -211,10 +192,9 @@ export default function App() {
                 </label>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={formatForInput(productValue)}
-                  onChange={(e) => handleCurrencyChange(e, setProductValue)}
+                  placeholder="Ex: 19.950,00"
+                  value={productValue}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
@@ -224,10 +204,9 @@ export default function App() {
                 </label>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={formatForInput(downPayment)}
-                  onChange={(e) => handleCurrencyChange(e, setDownPayment)}
+                  placeholder="Ex: 1.500,00"
+                  value={downPayment}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
@@ -295,7 +274,7 @@ export default function App() {
                           Entrada
                         </p>
                         <p className="text-2xl font-black text-neutral-900 tracking-tight">
-                          {formatCurrency(downPayment)}
+                          {formatCurrency(parseBRL(downPayment))}
                         </p>
                       </div>
 
