@@ -1,9 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calculator, RefreshCw, Share2 } from 'lucide-react';
-
-// Declare AutoNumeric global
-declare const AutoNumeric: any;
 
 // Types
 type Category = 'Moto' | 'Motor de Popa';
@@ -60,45 +57,9 @@ const RATES: Record<number, number> = {
 
 export default function App() {
   const [product, setProduct] = useState<string>('');
-  const [productValue, setProductValue] = useState<number>(0);
-  const [downPayment, setDownPayment] = useState<number>(0);
+  const [productValue, setProductValue] = useState<string>('');
+  const [downPayment, setDownPayment] = useState<string>('');
   const [installments, setInstallments] = useState<number>(48);
-
-  const productValueRef = useRef<HTMLInputElement>(null);
-  const downPaymentRef = useRef<HTMLInputElement>(null);
-  const autoNumericProduct = useRef<any>(null);
-  const autoNumericDown = useRef<any>(null);
-
-  // Initialize AutoNumeric
-  useEffect(() => {
-    const options = {
-      currencySymbol: 'R$ ',
-      decimalCharacter: ',',
-      digitGroupSeparator: '.',
-      decimalPlaces: 2,
-      unformatOnSubmit: true,
-      modifyValueOnWheel: false,
-    };
-
-    if (productValueRef.current && !autoNumericProduct.current) {
-      autoNumericProduct.current = new AutoNumeric(productValueRef.current, options);
-      productValueRef.current.addEventListener('autoNumeric:rawValueModified', (e: any) => {
-        setProductValue(Number(e.detail.newRawValue));
-      });
-    }
-
-    if (downPaymentRef.current && !autoNumericDown.current) {
-      autoNumericDown.current = new AutoNumeric(downPaymentRef.current, options);
-      downPaymentRef.current.addEventListener('autoNumeric:rawValueModified', (e: any) => {
-        setDownPayment(Number(e.detail.newRawValue));
-      });
-    }
-
-    return () => {
-      if (autoNumericProduct.current) autoNumericProduct.current.remove();
-      if (autoNumericDown.current) autoNumericDown.current.remove();
-    };
-  }, []);
 
   // Split products for the two dropdowns
   const motorcycles = PRODUCTS.filter(p => p.category === 'Moto');
@@ -112,10 +73,38 @@ export default function App() {
     setProduct(val);
   };
 
+  // Function to clean BRL values before calculation
+  const limparNumero = (valor: string): number => {
+    if (!valor) return 0;
+    let v = valor.replace("R$", "").trim();
+    v = v.replace(/\./g, '');
+    v = v.replace(',', '.');
+    return parseFloat(v);
+  };
+
+  // Function to format currency as user types (BRL mask)
+  const formatarMoeda = (val: string) => {
+    let valor = val.replace(/\D/g, '');
+    if (valor === "") return "";
+    
+    let n = Number(valor);
+    let formatted = (n / 100).toFixed(2);
+    formatted = formatted.replace(".", ",");
+    formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    
+    return "R$ " + formatted;
+  };
+
+  // Handler with masking
+  const handleCurrencyChange = (val: string, setter: (v: string) => void) => {
+    const masked = formatarMoeda(val);
+    setter(masked);
+  };
+
   // Calculation logic
   const calculation = useMemo(() => {
-    const valorProduto = productValue;
-    const entrada = downPayment;
+    const valorProduto = limparNumero(productValue);
+    const entrada = limparNumero(downPayment);
     const valorFinanciado = valorProduto - entrada;
 
     if (valorFinanciado <= 0 || !installments) return null;
@@ -135,10 +124,8 @@ export default function App() {
 
   const reset = () => {
     setProduct('');
-    if (autoNumericProduct.current) autoNumericProduct.current.set(0);
-    if (autoNumericDown.current) autoNumericDown.current.set(0);
-    setProductValue(0);
-    setDownPayment(0);
+    setProductValue('');
+    setDownPayment('');
     setInstallments(48);
   };
 
@@ -216,10 +203,11 @@ export default function App() {
                   Valor do Produto (R$)
                 </label>
                 <input
-                  ref={productValueRef}
                   type="text"
                   id="valorProduto"
                   placeholder="R$ 0,00"
+                  value={productValue}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
@@ -228,10 +216,11 @@ export default function App() {
                   Entrada (R$)
                 </label>
                 <input
-                  ref={downPaymentRef}
                   type="text"
                   id="entrada"
                   placeholder="R$ 0,00"
+                  value={downPayment}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
@@ -299,7 +288,7 @@ export default function App() {
                           Entrada
                         </p>
                         <p className="text-2xl font-black text-neutral-900 tracking-tight">
-                          {formatCurrency(downPayment)}
+                          {formatCurrency(limparNumero(downPayment))}
                         </p>
                       </div>
 
