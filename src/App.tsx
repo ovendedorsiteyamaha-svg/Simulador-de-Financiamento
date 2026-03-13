@@ -73,38 +73,40 @@ export default function App() {
     setProduct(val);
   };
 
-  // Function to convert BRL formatted string to a clean number for calculation
-  const parseBRL = (val: string): number => {
-    if (!val) return 0;
+  // Function to clean BRL values before calculation
+  const limparNumero = (valor: any): number => {
+    if (!valor) return 0;
     
-    // Remove dots (thousands separator) and replace comma with dot (decimal separator)
-    const cleanValue = val.replace(/\./g, '').replace(',', '.');
+    // Convert to string and remove dots (thousands separator), then replace comma with dot
+    const cleanValue = valor.toString()
+      .replace(/\./g, '')
+      .replace(',', '.');
+    
     const parsed = parseFloat(cleanValue);
-    
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  // Simple change handler without masking
+  // Simple change handler
   const handleCurrencyChange = (val: string, setter: (v: string) => void) => {
     setter(val);
   };
 
   // Calculation logic
   const calculation = useMemo(() => {
-    const val = parseBRL(productValue);
-    const down = parseBRL(downPayment);
-    const financed = val - down;
+    const valorProduto = limparNumero(productValue);
+    const entrada = limparNumero(downPayment);
+    const valorFinanciado = valorProduto - entrada;
 
-    if (financed <= 0 || !installments) return null;
+    if (valorFinanciado <= 0 || !installments) return null;
 
     const rate = RATES[installments];
     const n = installments;
 
     // Price Table Formula: PMT = PV * (i * (1 + i)^n) / ((1 + i)^n - 1)
-    const pmt = financed * (rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1);
+    const pmt = valorFinanciado * (rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1);
 
     return {
-      financed,
+      financed: valorFinanciado,
       pmt,
       total: pmt * n,
     };
@@ -274,7 +276,7 @@ export default function App() {
                           Entrada
                         </p>
                         <p className="text-2xl font-black text-neutral-900 tracking-tight">
-                          {formatCurrency(parseBRL(downPayment))}
+                          {formatCurrency(limparNumero(downPayment))}
                         </p>
                       </div>
 
