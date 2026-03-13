@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calculator, RefreshCw, ChevronRight, Smartphone, Share2 } from 'lucide-react';
 
@@ -74,9 +74,12 @@ export default function App() {
   };
 
   // Currency Masking Logic
-  const handleCurrencyChange = (val: string, setter: (v: number) => void) => {
+  const handleCurrencyChange = (e: ChangeEvent<HTMLInputElement>, setter: (v: number) => void) => {
+    const val = e.target.value;
     // Remove all non-digits
     const cleanValue = val.replace(/\D/g, '');
+    // Limit to 12 digits to prevent overflow
+    if (cleanValue.length > 12) return;
     // Convert to number (treating last two digits as decimals)
     const numericValue = cleanValue ? parseInt(cleanValue, 10) / 100 : 0;
     setter(numericValue);
@@ -84,6 +87,7 @@ export default function App() {
 
   const formatForInput = (val: number) => {
     if (val === 0) return '';
+    // Use a more stable formatting for the input to avoid cursor jumps and mobile issues
     return new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -194,7 +198,7 @@ export default function App() {
                   inputMode="numeric"
                   placeholder="0,00"
                   value={formatForInput(productValue)}
-                  onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
+                  onChange={(e) => handleCurrencyChange(e, setProductValue)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
@@ -207,7 +211,7 @@ export default function App() {
                   inputMode="numeric"
                   placeholder="0,00"
                   value={formatForInput(downPayment)}
-                  onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
+                  onChange={(e) => handleCurrencyChange(e, setDownPayment)}
                   className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
                 />
               </div>
