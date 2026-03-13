@@ -76,16 +76,12 @@ export default function App() {
   // Function to clean BRL values before calculation
   const limparNumero = (valor: string): number => {
     if (!valor) return 0;
-    // Remove R$, remove points (thousands), and convert comma to point (decimal)
-    const v = valor
-      .replace("R$", "")
-      .replace(/\./g, "")
-      .replace(",", ".")
-      .trim();
-    return parseFloat(v) || 0;
+    // Rule 3: remover R$, pontos, vírgulas, espaços (usando apenas dígitos)
+    const limpo = valor.replace(/\D/g, '');
+    return parseInt(limpo) || 0;
   };
 
-  // Function to format number to BRL currency
+  // Function to format number to BRL currency (for results)
   const formatarReal = (valor: number) => {
     return valor.toLocaleString("pt-BR", {
       style: "currency",
@@ -98,13 +94,17 @@ export default function App() {
     return valor.replace(/\D/g, '');
   };
 
-  // Stable mask application (Cents-based logic for BRL)
+  // Stable mask application for inputs (without decimals to avoid calculation bugs)
   const aplicarMascara = (val: string) => {
     const numeroStr = somenteNumero(val);
     if (numeroStr === "") return "";
-    // Divide by 100 to treat input as cents, ensuring stable formatting
-    const numero = parseInt(numeroStr) / 100;
-    return formatarReal(numero);
+    const numero = parseInt(numeroStr);
+    // Format without decimals for the input fields
+    return numero.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0
+    });
   };
 
   // Handler with masking
@@ -119,10 +119,11 @@ export default function App() {
     const entrada = limparNumero(downPayment);
     const valorFinanciado = valorProduto - entrada;
 
+    // Rule: O cálculo deve usar apenas os números digitados
     if (valorFinanciado <= 0 || !installments) return null;
 
-    const rate = RATES[installments]; // Monthly interest rate
-    const n = installments;           // Number of installments
+    const rate = RATES[installments]; // Taxa mensal
+    const n = installments;           // Parcelas
 
     // Price Table Formula: PMT = PV * (i * (1 + i)^n) / ((1 + i)^n - 1)
     const pmt = valorFinanciado * (rate * Math.pow(1 + rate, n)) / (Math.pow(1 + rate, n) - 1);
