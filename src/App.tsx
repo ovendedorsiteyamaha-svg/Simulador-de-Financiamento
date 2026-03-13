@@ -83,15 +83,21 @@ export default function App() {
     );
   };
 
-  // Function to format currency as user types (BRL mask)
+  // Improved currency formatter for mobile stability
   const formatarMoeda = (val: string) => {
     let valor = val.replace(/\D/g, '');
-    if (!valor) return '';
     
-    // Convert to decimal format
-    let formatted = (Number(valor) / 100).toFixed(2) + '';
-    formatted = formatted.replace(".", ",");
-    formatted = formatted.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    if (valor === '') return '';
+
+    // Convert to number and then to decimal string
+    const numericValue = parseInt(valor);
+    let formatted = (numericValue / 100).toFixed(2);
+    
+    // Replace dot with comma
+    formatted = formatted.replace('.', ',');
+    
+    // Add thousands separator
+    formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     
     return formatted;
   };
