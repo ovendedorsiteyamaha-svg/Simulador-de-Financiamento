@@ -74,21 +74,32 @@ export default function App() {
   };
 
   // Function to clean BRL values before calculation
-  const limparNumero = (valor: any): number => {
+  const limparNumero = (valor: string): number => {
     if (!valor) return 0;
-    
-    // Convert to string and remove dots (thousands separator), then replace comma with dot
-    const cleanValue = valor.toString()
-      .replace(/\./g, '')
-      .replace(',', '.');
-    
-    const parsed = parseFloat(cleanValue);
-    return isNaN(parsed) ? 0 : parsed;
+    return parseFloat(
+      valor
+        .replace(/\./g, '')
+        .replace(',', '.')
+    );
   };
 
-  // Simple change handler
+  // Function to format currency as user types (BRL mask)
+  const formatarMoeda = (val: string) => {
+    let valor = val.replace(/\D/g, '');
+    if (!valor) return '';
+    
+    // Convert to decimal format
+    let formatted = (Number(valor) / 100).toFixed(2) + '';
+    formatted = formatted.replace(".", ",");
+    formatted = formatted.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    
+    return formatted;
+  };
+
+  // Handler with masking
   const handleCurrencyChange = (val: string, setter: (v: string) => void) => {
-    setter(val);
+    const masked = formatarMoeda(val);
+    setter(masked);
   };
 
   // Calculation logic
