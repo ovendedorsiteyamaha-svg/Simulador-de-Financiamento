@@ -73,21 +73,37 @@ export default function App() {
     setProduct(val);
   };
 
+  // Function to convert BRL formatted string to a clean number
+  const parseBRL = (val: string): number => {
+    if (!val) return 0;
+    
+    // Remove all dots (thousands separator)
+    // Replace comma with dot (decimal separator)
+    const normalized = val.replace(/\./g, '').replace(',', '.');
+    
+    // Parse to float
+    const parsed = parseFloat(normalized);
+    
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
   // Currency Masking Logic
   const handleCurrencyChange = (e: ChangeEvent<HTMLInputElement>, setter: (v: number) => void) => {
     const val = e.target.value;
-    // Remove all non-digits
-    const cleanValue = val.replace(/\D/g, '');
-    // Limit to 12 digits to prevent overflow
-    if (cleanValue.length > 12) return;
-    // Convert to number (treating last two digits as decimals)
-    const numericValue = cleanValue ? parseInt(cleanValue, 10) / 100 : 0;
+    
+    // Use the parseBRL function to get the clean number
+    const numericValue = parseBRL(val);
+    
+    // Limit to prevent extreme values
+    if (numericValue > 999999999) return;
+    
     setter(numericValue);
   };
 
   const formatForInput = (val: number) => {
     if (val === 0) return '';
-    // Use a more stable formatting for the input to avoid cursor jumps and mobile issues
+    
+    // Format back to BRL string for the input display
     return new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -195,7 +211,7 @@ export default function App() {
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   placeholder="0,00"
                   value={formatForInput(productValue)}
                   onChange={(e) => handleCurrencyChange(e, setProductValue)}
@@ -208,7 +224,7 @@ export default function App() {
                 </label>
                 <input
                   type="text"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   placeholder="0,00"
                   value={formatForInput(downPayment)}
                   onChange={(e) => handleCurrencyChange(e, setDownPayment)}
