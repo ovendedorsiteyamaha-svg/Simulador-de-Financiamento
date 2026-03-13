@@ -76,28 +76,39 @@ export default function App() {
   // Function to clean BRL values before calculation
   const limparNumero = (valor: string): number => {
     if (!valor) return 0;
-    let v = valor.replace("R$", "").trim();
-    v = v.replace(/\./g, '');
-    v = v.replace(',', '.');
-    return parseFloat(v);
+    return parseFloat(
+      valor
+        .replace("R$", "")
+        .replace(/\./g, "")
+        .replace(",", ".")
+        .trim()
+    );
   };
 
-  // Function to format currency as user types (BRL mask)
-  const formatarMoeda = (val: string) => {
-    let valor = val.replace(/\D/g, '');
-    if (valor === "") return "";
-    
-    let n = Number(valor);
-    let formatted = (n / 100).toFixed(2);
-    formatted = formatted.replace(".", ",");
-    formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    
-    return "R$ " + formatted;
+  // Function to format number to BRL currency
+  const formatarReal = (valor: number) => {
+    return valor.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  };
+
+  // Function to capture only digits
+  const somenteNumero = (valor: string) => {
+    return valor.replace(/\D/g, '');
+  };
+
+  // Stable mask application
+  const aplicarMascara = (val: string) => {
+    const numeroStr = somenteNumero(val);
+    if (numeroStr === "") return "";
+    const numero = parseInt(numeroStr);
+    return formatarReal(numero);
   };
 
   // Handler with masking
   const handleCurrencyChange = (val: string, setter: (v: string) => void) => {
-    const masked = formatarMoeda(val);
+    const masked = aplicarMascara(val);
     setter(masked);
   };
 
