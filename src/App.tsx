@@ -50,35 +50,31 @@ const PRODUCTS: Product[] = [
 ];
 
 const RATES: Record<number, number> = {
-  24: 0.0182,
-  36: 0.0235,
-  48: 0.0287,
+  24: 0.0300,
+  36: 0.0350,
+  48: 0.0400,
 };
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState<'Motocicletas' | 'Motores'>('Motocicletas');
   const [product, setProduct] = useState<string>('');
-  const [productValue, setProductValue] = useState<string>('');
-  const [downPayment, setDownPayment] = useState<string>('');
+  const [productValue, setProductValue] = useState<string>('R$ 0,00');
+  const [downPayment, setDownPayment] = useState<string>('R$ 0,00');
   const [installments, setInstallments] = useState<number>(48);
 
-  // Split products for the two dropdowns
+  // Split products for the tabs
   const motorcycles = PRODUCTS.filter(p => p.category === 'Moto');
   const outboardMotors = PRODUCTS.filter(p => p.category === 'Motor de Popa');
 
-  const handleMotorcycleChange = (val: string) => {
-    setProduct(val);
-  };
-
-  const handleOutboardChange = (val: string) => {
-    setProduct(val);
-  };
+  const currentProducts = activeTab === 'Motocicletas' ? motorcycles : outboardMotors;
 
   // Function to clean BRL values before calculation
   const limparNumero = (valor: string): number => {
     if (!valor) return 0;
-    // Rule 3: remover R$, pontos, vírgulas, espaços (usando apenas dígitos)
+    // Rule: remover R$, pontos, vírgulas, espaços e dividir por 100 
+    // para compensar as casas decimais exibidas na máscara
     const limpo = valor.replace(/\D/g, '');
-    return parseInt(limpo) || 0;
+    return (parseInt(limpo) / 100) || 0;
   };
 
   // Function to format number to BRL currency (for results)
@@ -94,16 +90,17 @@ export default function App() {
     return valor.replace(/\D/g, '');
   };
 
-  // Stable mask application for inputs (without decimals to avoid calculation bugs)
+  // Stable mask application for inputs (showing decimals like in the image)
   const aplicarMascara = (val: string) => {
     const numeroStr = somenteNumero(val);
     if (numeroStr === "") return "";
-    const numero = parseInt(numeroStr);
-    // Format without decimals for the input fields
+    const numero = parseInt(numeroStr) / 100;
+    // Format with decimals to match the image
     return numero.toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
-      maximumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
   };
 
@@ -120,7 +117,7 @@ export default function App() {
     const valorFinanciado = valorProduto - entrada;
 
     // Rule: O cálculo deve usar apenas os números digitados
-    if (valorFinanciado <= 0 || !installments) return null;
+    if (!product || valorFinanciado <= 0 || !installments) return null;
 
     const rate = RATES[installments]; // Taxa mensal
     const n = installments;           // Parcelas
@@ -137,8 +134,8 @@ export default function App() {
 
   const reset = () => {
     setProduct('');
-    setProductValue('');
-    setDownPayment('');
+    setProductValue('R$ 0,00');
+    setDownPayment('R$ 0,00');
     setInstallments(48);
   };
 
@@ -150,224 +147,185 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans p-4 md:p-8 lg:p-12">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] font-sans p-4 md:p-8">
+      <div className="max-w-md mx-auto space-y-8">
         {/* Header */}
-        <header className="text-center space-y-2 mb-4">
-          <div className="inline-flex items-center justify-center p-3 bg-yamaha-blue rounded-2xl shadow-lg shadow-blue-200 mb-2">
-            <Calculator className="w-6 h-6 text-white" />
+        <header className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#003B8E] rounded-xl shadow-lg">
+            <Calculator className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-800">
-            Simulador de Financiamento Yamaha
-          </h1>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-[#003B8E] leading-tight">
+              Simulador de Financiamento<br />Yamaha
+            </h1>
+            <p className="text-sm text-neutral-500">
+              Simulação de parcelamento em tempo real
+            </p>
+          </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Form Section */}
-          <section className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100 space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-            {/* Two Dropdowns for Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 ml-1">
-                  Motocicletas
-                </label>
-                <select
-                  value={motorcycles.some(m => m.name === product) ? product : ''}
-                  onChange={(e) => handleMotorcycleChange(e.target.value)}
-                  className={`w-full h-14 px-4 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all appearance-none cursor-pointer ${
-                    motorcycles.some(m => m.name === product) ? 'bg-blue-50 text-blue-800 font-semibold' : 'bg-neutral-50 text-neutral-500'
-                  }`}
-                >
-                  <option value="">Selecione Moto</option>
-                  {motorcycles.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* Main Card */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100 space-y-6">
+          {/* Tabs */}
+          <div className="bg-[#F1F5F9] p-1 rounded-xl flex">
+            <button
+              onClick={() => {
+                setActiveTab('Motocicletas');
+                setProduct('');
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === 'Motocicletas' ? 'bg-white text-[#003B8E] shadow-sm' : 'text-neutral-500'
+              }`}
+            >
+              <span className="text-lg">🏍️</span> Motocicletas
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('Motores');
+                setProduct('');
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === 'Motores' ? 'bg-white text-[#003B8E] shadow-sm' : 'text-neutral-500'
+              }`}
+            >
+              <span className="text-lg">⚓</span> Motores
+            </button>
+          </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 ml-1">
-                  Motores de Popa
-                </label>
-                <select
-                  value={outboardMotors.some(m => m.name === product) ? product : ''}
-                  onChange={(e) => handleOutboardChange(e.target.value)}
-                  className={`w-full h-14 px-4 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all appearance-none cursor-pointer ${
-                    outboardMotors.some(m => m.name === product) ? 'bg-blue-50 text-blue-800 font-semibold' : 'bg-neutral-50 text-neutral-500'
-                  }`}
-                >
-                  <option value="">Selecione Motor</option>
-                  {outboardMotors.map((p) => (
-                    <option key={p.name} value={p.name}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Values */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 ml-1">
-                  Valor do Produto (R$)
-                </label>
-                <input
-                  type="text"
-                  id="valorProduto"
-                  placeholder="R$ 0,00"
-                  value={productValue}
-                  onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
-                  className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 ml-1">
-                  Entrada (R$)
-                </label>
-                <input
-                  type="text"
-                  id="entrada"
-                  placeholder="R$ 0,00"
-                  value={downPayment}
-                  onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
-                  className="w-full h-14 px-4 bg-neutral-50 border-none rounded-2xl text-lg focus:ring-2 focus:ring-yamaha-blue transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Installments */}
+          <div className="space-y-6">
+            {/* Modelo */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400 ml-1">
-                Parcelamento
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                MODELO
+              </label>
+              <div className="relative">
+                <select
+                  value={product}
+                  onChange={(e) => setProduct(e.target.value)}
+                  className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>Escolher Produto</option>
+                  {currentProducts.map((p) => (
+                    <option key={p.name} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Valor do Produto */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                VALOR DO PRODUTO
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={productValue}
+                onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
+                className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Entrada */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                ENTRADA
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={downPayment}
+                onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
+                className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Plano de Parcelamento */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                PLANO DE PARCELAMENTO
               </label>
               <div className="grid grid-cols-3 gap-3">
                 {[24, 36, 48].map((n) => (
                   <button
                     key={n}
                     onClick={() => setInstallments(n)}
-                    className={`h-14 rounded-2xl font-bold transition-all ${
+                    className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition-all active:scale-95 ${
                       installments === n
-                        ? 'bg-yamaha-blue text-white shadow-md shadow-blue-200'
-                        : 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100'
+                        ? 'border-[#003B8E] bg-white'
+                        : 'border-neutral-100 bg-[#F8FAFC]'
                     }`}
                   >
-                    {n}x
+                    <span className={`text-lg font-bold ${installments === n ? 'text-[#003B8E]' : 'text-neutral-600'}`}>
+                      {n}x
+                    </span>
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-neutral-400 text-center mt-2">
-                Taxas Banco Yamaha: 24x (1.82%) • 36x (2.35%) • 48x (2.87%)
-              </p>
             </div>
           </div>
-          </section>
-
-          {/* Result Column */}
-          <div className="space-y-6">
-            <AnimatePresence mode="wait">
-              {calculation && product ? (
-                <motion.div
-                  key="result"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-4"
-                >
-                  <div 
-                    id="simulation-card"
-                    className="bg-white rounded-[2.5rem] shadow-2xl shadow-blue-100 border border-neutral-100 overflow-hidden relative"
-                  >
-                    {/* Header Section */}
-                    <div className="bg-yamaha-blue p-6 text-white relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-                      <div className="relative z-10 space-y-0.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-200 opacity-80">
-                          Simulação
-                        </p>
-                        <h2 className="text-4xl font-black tracking-tighter leading-[0.9]">
-                          {product}
-                        </h2>
-                      </div>
-                    </div>
-
-                    {/* Body Section */}
-                    <div className="p-6 space-y-4">
-                      <div className="bg-blue-50/50 rounded-3xl p-4 border border-blue-100 text-center space-y-0.5">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-yamaha-blue opacity-70">
-                          Entrada
-                        </p>
-                        <p className="text-2xl font-black text-neutral-900 tracking-tight">
-                          {formatCurrency(limparNumero(downPayment))}
-                        </p>
-                      </div>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                          <div className="w-full border-t border-dashed border-neutral-200"></div>
-                        </div>
-                        <div className="relative flex justify-center">
-                          <span className="bg-white px-4 text-[10px] font-bold uppercase tracking-widest text-neutral-300">
-                            Plano Sugerido
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-center space-y-0">
-                        <div className="inline-flex items-baseline gap-2">
-                          <span className="text-4xl font-black text-neutral-900 tracking-tighter">
-                            {installments}x
-                          </span>
-                          <span className="text-base font-bold text-yamaha-blue">de</span>
-                        </div>
-                        <div className="text-3xl font-black text-yamaha-blue tracking-tight">
-                          {formatCurrency(calculation.pmt)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-3">
-                    <button
-                      onClick={reset}
-                      className="w-full h-16 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all"
-                    >
-                      <RefreshCw className="w-5 h-5" />
-                      Fazer nova simulação
-                    </button>
-                    
-                    <p className="text-center text-[10px] text-neutral-400 px-8">
-                      *Valores sujeitos a alteração conforme análise de crédito e tabela vigente.
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-white/50 border-2 border-dashed border-neutral-200 rounded-[2.5rem] p-12 text-center space-y-4"
-                >
-                  <div className="w-16 h-16 bg-neutral-100 rounded-full mx-auto flex items-center justify-center">
-                    <Share2 className="w-6 h-6 text-neutral-300" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold text-neutral-400 uppercase tracking-wider">
-                      Aguardando Dados
-                    </p>
-                    <p className="text-xs text-neutral-400 max-w-[200px] mx-auto">
-                      Selecione um produto e insira os valores para gerar o resumo.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
         </div>
+
+        {/* Result Card */}
+        <AnimatePresence mode="wait">
+          {calculation && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-[#003B8E] rounded-3xl p-8 text-white shadow-xl space-y-8"
+            >
+              <div className="space-y-6">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+                  SIMULAÇÃO
+                </p>
+                <div className="flex justify-between items-start gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium opacity-60">Modelo Selecionado</p>
+                    <p className="text-2xl font-bold leading-tight">{product}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-medium opacity-60">Entrada</p>
+                    <p className="text-2xl font-bold">{formatCurrency(limparNumero(downPayment))}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#0D47A1] rounded-2xl p-6 text-center space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                  PLANO SUGERIDO
+                </p>
+                <div className="flex items-baseline justify-center gap-2">
+                  <span className="text-3xl font-bold">{installments}x</span>
+                  <span className="text-sm font-medium opacity-60">de</span>
+                  <span className="text-3xl font-bold">{formatCurrency(calculation.pmt)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={reset}
+                className="w-full h-14 bg-white text-[#003B8E] rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Nova Simulação
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <footer className="text-center space-y-1 pb-8">
+          <p className="text-[10px] text-neutral-400">
+            © 2026 Yamaha Motor do Brasil. Simulação sujeita a análise de crédito.
+          </p>
+        </footer>
       </div>
     </div>
   );
