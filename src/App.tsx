@@ -148,7 +148,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] font-sans p-4 md:p-8">
-      <div className="max-w-md mx-auto space-y-8">
+      <div className="max-w-md md:max-w-2xl lg:max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <header className="text-center space-y-4">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#003B8E] rounded-xl shadow-lg">
@@ -164,9 +164,11 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main Card */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-100 space-y-6">
-          {/* Tabs */}
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Main Card (Inputs) */}
+          <div className="lg:col-span-7 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-neutral-100 space-y-8">
+            {/* Tabs */}
           <div className="bg-[#F1F5F9] p-1 rounded-xl flex">
             <button
               onClick={() => {
@@ -219,32 +221,35 @@ export default function App() {
               </div>
             </div>
 
-            {/* Valor do Produto */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
-                VALOR DO PRODUTO
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={productValue}
-                onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
-                className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
-              />
-            </div>
+            {/* Valor e Entrada em Grid no Desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Valor do Produto */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                  VALOR DO PRODUTO
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={productValue}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setProductValue)}
+                  className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
+                />
+              </div>
 
-            {/* Entrada */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
-                ENTRADA
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={downPayment}
-                onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
-                className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
-              />
+              {/* Entrada */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 ml-1">
+                  ENTRADA
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={downPayment}
+                  onChange={(e) => handleCurrencyChange(e.target.value, setDownPayment)}
+                  className="w-full h-14 px-4 bg-white border border-neutral-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-[#003B8E] focus:border-transparent transition-all"
+                />
+              </div>
             </div>
 
             {/* Plano de Parcelamento */}
@@ -273,52 +278,63 @@ export default function App() {
           </div>
         </div>
 
-        {/* Result Card */}
-        <AnimatePresence mode="wait">
-          {calculation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="bg-[#003B8E] rounded-3xl p-8 text-white shadow-xl space-y-8"
-            >
-              <div className="space-y-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
-                  SIMULAÇÃO
-                </p>
-                <div className="flex justify-between items-start gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-medium opacity-60">Modelo Selecionado</p>
-                    <p className="text-2xl font-bold leading-tight">{product}</p>
+          {/* Result Card Column */}
+          <div className="lg:col-span-5 lg:sticky lg:top-8">
+            <AnimatePresence mode="wait">
+              {calculation ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-[#003B8E] rounded-3xl p-8 text-white shadow-xl space-y-8"
+                >
+                  <div className="space-y-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+                      SIMULAÇÃO
+                    </p>
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-medium opacity-60">Modelo Selecionado</p>
+                        <p className="text-2xl font-bold leading-tight">{product}</p>
+                      </div>
+                      <div className="space-y-1 text-right">
+                        <p className="text-[10px] font-medium opacity-60">Entrada</p>
+                        <p className="text-2xl font-bold">{formatCurrency(limparNumero(downPayment))}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1 text-right">
-                    <p className="text-[10px] font-medium opacity-60">Entrada</p>
-                    <p className="text-2xl font-bold">{formatCurrency(limparNumero(downPayment))}</p>
+
+                  <div className="bg-[#0D47A1] rounded-2xl p-6 text-center space-y-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                      PLANO SUGERIDO
+                    </p>
+                    <div className="flex items-baseline justify-center gap-2">
+                      <span className="text-3xl font-bold">{installments}x</span>
+                      <span className="text-sm font-medium opacity-60">de</span>
+                      <span className="text-3xl font-bold">{formatCurrency(calculation.pmt)}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="bg-[#0D47A1] rounded-2xl p-6 text-center space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-                  PLANO SUGERIDO
-                </p>
-                <div className="flex items-baseline justify-center gap-2">
-                  <span className="text-3xl font-bold">{installments}x</span>
-                  <span className="text-sm font-medium opacity-60">de</span>
-                  <span className="text-3xl font-bold">{formatCurrency(calculation.pmt)}</span>
+                  <button
+                    onClick={reset}
+                    className="w-full h-14 bg-white text-[#003B8E] rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                    Nova Simulação
+                  </button>
+                </motion.div>
+              ) : (
+                <div className="bg-white border-2 border-dashed border-neutral-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
+                  <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mb-4">
+                    <Calculator className="w-8 h-8 text-neutral-300" />
+                  </div>
+                  <h3 className="text-neutral-900 font-bold text-lg">Aguardando dados</h3>
+                  <p className="text-neutral-400 text-sm">Selecione um produto para ver o resultado.</p>
                 </div>
-              </div>
-
-              <button
-                onClick={reset}
-                className="w-full h-14 bg-white text-[#003B8E] rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
-              >
-                <RefreshCw className="w-5 h-5" />
-                Nova Simulação
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
         {/* Footer */}
         <footer className="text-center space-y-1 pb-8">
